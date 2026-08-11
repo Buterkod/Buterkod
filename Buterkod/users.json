@@ -1,0 +1,92 @@
+{
+    "admin": {
+        "password": "123",
+        "avatar": "🟩",
+        "library": {},
+        "friends": [],
+        "requests": [],
+        "dark_theme": false
+    },
+    "67": {
+        "password": "67",
+        "avatar": "🥪",
+        "library": {
+            "Космический выживач": "play",
+            "Пиксельный платформер": "play",
+            "Змейка 2.0": "play",
+            "Бутербродный Кликер": "play",
+            "Лабиринт Тостера": "play"
+        },
+        "friends": [
+            "123123"
+        ],
+        "requests": [],
+        "dark_theme": false
+    },
+    "6767": {
+        "password": "6767",
+        "avatar": "🥵",
+        "library": {
+            "Космический выживач": "play",
+            "Пиксельный платформер": "play",
+            "Змейка 2.0": "play",
+            "Бутербродный Кликер": "play",
+            "Лабиринт Тостера": "play"
+        },
+        "friends": [],
+        "requests": [],
+        "dark_theme": false
+    },
+    "1": {
+        "password": "1",
+        "avatar": "🟩",
+        "library": {
+            "Космический выживач": true,
+            "Пиксельный платформер": true,
+            "Змейка 2.0": "play"
+        },
+        "friends": [],
+        "requests": [
+            "123123"
+        ],
+        "dark_theme": false
+    },
+    "12": {
+        "password": "1",
+        "avatar": "🟩",
+        "library": {},
+        "friends": [],
+        "requests": [],
+        "dark_theme": false
+    },
+    "SteamUser": {
+        "password": "steam_secure_password",
+        "avatar": "🍞",
+        "library": {
+            "Космический выживач": "play",
+            "Пиксельный платформер": "download",
+            "Змейка 2.0": "download",
+            "Бутербродный Кликер": "download",
+            "Лабиринт Тостера": "download"
+        },
+        "friends": [],
+        "requests": [],
+        "dark_theme": false
+    },
+    "123123": {
+        "password": "123123",
+        "avatar": "🤣",
+        "library": {
+            "Космический выживач": "play",
+            "Пиксельный платформер": "play",
+            "Змейка 2.0": "play",
+            "Лабиринт Тостера": "play",
+            "Бутербродный Кликер": "play"
+        },
+        "friends": [
+            "67"
+        ],
+        "requests": [],
+        "dark_theme": false
+    }
+}
