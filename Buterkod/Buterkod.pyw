@@ -3,9 +3,8 @@ import os
 import random
 import subprocess
 import sys
-from urllib.parse import parse_qs, urlparse
 from PyQt6.QtCore import QPointF, Qt, QTimer, QUrl
-from PyQt6.QtGui import QBrush, QColor, QIcon, QLinearGradient, QPainter, QPixmap
+from PyQt6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QPixmap
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtWidgets import (
     QApplication,
@@ -158,8 +157,6 @@ class MusicToggleButton(QPushButton):
         " border-radius: 22px; font-size: 20px;"
     )
     self.clicked.connect(self.toggle_music)
-
-    # Подписываемся на изменение состояния мьюта в аудиосистеме для полной синхронизации
     self.main_window.audio_output.mutedChanged.connect(self.update_icon)
 
   def toggle_music(self):
@@ -223,6 +220,9 @@ class LoginScreen(AnimatedAuthBackground):
         "font-size: 16px; font-weight: bold; color: black; background:"
         " transparent;"
     )
+
+    pass_layout = QHBoxLayout()
+    pass_layout.setSpacing(5)
     self.password_input = QLineEdit()
     self.password_input.setPlaceholderText("Введите пароль")
     self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
@@ -230,8 +230,19 @@ class LoginScreen(AnimatedAuthBackground):
         "padding: 8px; font-size: 14px; background: #fff; color: black;"
         " border: 1px solid #ccc; border-radius: 5px;"
     )
+
+    self.eye_btn = QPushButton("👁")
+    self.eye_btn.setFixedSize(35, 35)
+    self.eye_btn.setStyleSheet(
+        "background: #eee; border-radius: 5px; font-size: 16px;"
+    )
+    self.eye_btn.clicked.connect(self.toggle_password_visibility)
+
+    pass_layout.addWidget(self.password_input)
+    pass_layout.addWidget(self.eye_btn)
+
     row2.addWidget(lbl_pass)
-    row2.addWidget(self.password_input)
+    row2.addLayout(pass_layout)
 
     form_layout.addLayout(row1)
     form_layout.addLayout(row2)
@@ -265,6 +276,14 @@ class LoginScreen(AnimatedAuthBackground):
 
     center_layout.addWidget(card, alignment=Qt.AlignmentFlag.AlignCenter)
     main_layout.addLayout(center_layout)
+
+  def toggle_password_visibility(self):
+    if self.password_input.echoMode() == QLineEdit.EchoMode.Password:
+      self.password_input.setEchoMode(QLineEdit.EchoMode.Normal)
+      self.eye_btn.setText("👁‍🗨")
+    else:
+      self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
+      self.eye_btn.setText("👁")
 
   def try_login(self):
     username = self.username_input.text().strip()
@@ -328,6 +347,9 @@ class RegisterScreen(AnimatedAuthBackground):
         "font-size: 16px; font-weight: bold; color: black; background:"
         " transparent;"
     )
+
+    pass_layout = QHBoxLayout()
+    pass_layout.setSpacing(5)
     self.password_input = QLineEdit()
     self.password_input.setPlaceholderText("Придумайте пароль")
     self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
@@ -335,8 +357,19 @@ class RegisterScreen(AnimatedAuthBackground):
         "padding: 8px; font-size: 14px; background: #fff; color: black;"
         " border: 1px solid #ccc; border-radius: 5px;"
     )
+
+    self.eye_btn = QPushButton("👁")
+    self.eye_btn.setFixedSize(35, 35)
+    self.eye_btn.setStyleSheet(
+        "background: #eee; border-radius: 5px; font-size: 16px;"
+    )
+    self.eye_btn.clicked.connect(self.toggle_password_visibility)
+
+    pass_layout.addWidget(self.password_input)
+    pass_layout.addWidget(self.eye_btn)
+
     row2.addWidget(lbl_pass)
-    row2.addWidget(self.password_input)
+    row2.addLayout(pass_layout)
 
     form_layout.addLayout(row1)
     form_layout.addLayout(row2)
@@ -370,6 +403,14 @@ class RegisterScreen(AnimatedAuthBackground):
 
     center_layout.addWidget(card, alignment=Qt.AlignmentFlag.AlignCenter)
     main_layout.addLayout(center_layout)
+
+  def toggle_password_visibility(self):
+    if self.password_input.echoMode() == QLineEdit.EchoMode.Password:
+      self.password_input.setEchoMode(QLineEdit.EchoMode.Normal)
+      self.eye_btn.setText("👁‍🗨")
+    else:
+      self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
+      self.eye_btn.setText("👁")
 
   def try_register(self):
     username = self.username_input.text().strip()
@@ -814,50 +855,44 @@ class MainScreen(QWidget):
     self.friends_list_widget = QWidget()
     self.friends_list_layout = QVBoxLayout(self.friends_list_widget)
     self.friends_list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+    self.friends_sub_stack.addWidget(self.friends_list_widget)
 
-    add_friend_widget = QWidget()
-    add_friend_layout = QVBoxLayout(add_friend_widget)
+    self.add_friend_widget = QWidget()
+    add_friend_layout = QVBoxLayout(self.add_friend_widget)
     add_friend_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+    add_friend_layout.setSpacing(15)
 
-    add_lbl = QLabel("Введите никнейм пользователя:")
-    add_lbl.setStyleSheet("font-size: 16px; font-weight: bold; border: none;")
-
-    input_row = QHBoxLayout()
     self.friend_search_input = QLineEdit()
-    self.friend_search_input.setPlaceholderText("Никнейм...")
+    self.friend_search_input.setPlaceholderText("Введите никнейм друга...")
     self.friend_search_input.setStyleSheet(
-        "padding: 10px; font-size: 14px; border-radius: 6px;"
+        "padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius:"
+        " 6px;"
     )
 
     send_req_btn = QPushButton("Отправить запрос")
     send_req_btn.setStyleSheet(
-        "background: #4CAF50; color: white; font-weight: bold; padding: 10px"
-        " 20px; border-radius: 6px;"
+        "background: #ff7700; color: white; padding: 8px 20px; border-radius:"
+        " 6px; font-weight: bold; font-size: 14px;"
     )
     send_req_btn.clicked.connect(self.send_friend_request)
 
-    input_row.addWidget(self.friend_search_input)
-    input_row.addWidget(send_req_btn)
-
     self.friend_req_status = QLabel("")
-    self.friend_req_status.setStyleSheet("font-size: 14px; border: none;")
+    self.friend_req_status.setStyleSheet("font-size: 13px; border: none;")
 
-    add_friend_layout.addWidget(add_lbl)
-    add_friend_layout.addSpacing(10)
-    add_friend_layout.addLayout(input_row)
-    add_friend_layout.addSpacing(10)
+    add_friend_layout.addWidget(self.friend_search_input)
+    add_friend_layout.addWidget(send_req_btn)
     add_friend_layout.addWidget(self.friend_req_status)
+    self.friends_sub_stack.addWidget(self.add_friend_widget)
 
     self.requests_widget = QWidget()
     self.requests_layout = QVBoxLayout(self.requests_widget)
     self.requests_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-    self.friends_sub_stack.addWidget(self.friends_list_widget)
-    self.friends_sub_stack.addWidget(add_friend_widget)
     self.friends_sub_stack.addWidget(self.requests_widget)
 
     friends_container_layout.addWidget(self.friends_sub_stack)
-    friends_main_layout.addWidget(self.friends_container)
+    friends_main_layout.addWidget(
+        self.friends_container, alignment=Qt.AlignmentFlag.AlignCenter
+    )
 
     friends_scroll = QScrollArea()
     friends_scroll.setWidgetResizable(True)
@@ -869,144 +904,80 @@ class MainScreen(QWidget):
     self.content_stack.addWidget(friends_scroll)
 
     self.main_layout_base.addWidget(self.content_stack)
-    self.setLayout(self.main_layout_base)
-
-    self.apply_theme()
-
-  def is_dark_theme(self):
-    if not self.main_window.current_user:
-      return False
-    user_data = self.main_window.users_db.get(self.main_window.current_user, {})
-    return user_data.get("dark_theme", False)
-
-  def apply_theme(self):
-    dark = self.is_dark_theme()
-
-    if dark:
-      self.setStyleSheet("background-color: #121212; color: white;")
-      self.top_bar.setStyleSheet("background-color: #1f1f1f;")
-      self.about_btn.setStyleSheet(
-          "background-color: #333; color: white; font-weight: bold; border: 2px"
-          " solid #555; border-radius: 8px; padding: 6px 14px; font-size: 14px;"
-      )
-      self.games_container.setStyleSheet(
-          "background-color: #1e1e1e; border: 3px solid #ff7700; border-radius:"
-          " 15px;"
-      )
-      self.lib_container.setStyleSheet(
-          "background-color: #1e1e1e; border: 3px solid #ff7700; border-radius:"
-          " 15px;"
-      )
-      self.friends_container.setStyleSheet(
-          "background-color: #1e1e1e; border: 3px solid #ff7700; border-radius:"
-          " 15px;"
-      )
-      for card in self.shop_card_frames:
-        card.setStyleSheet(
-            "background: #2a2a2a; border: 1px solid #444; border-radius: 12px;"
-        )
-      inactive_tab = (
-          "background-color: #222; color: #ccc; font-weight: bold; border: 2px"
-          " solid #444; border-radius: 8px; padding: 6px 14px; font-size: 14px;"
-      )
-    else:
-      self.setStyleSheet("background-color: white; color: black;")
-      self.top_bar.setStyleSheet("background-color: #ff7700;")
-      self.about_btn.setStyleSheet(
-          "background-color: white; color: black; font-weight: bold; border: 2px"
-          " solid #333; border-radius: 8px; padding: 6px 14px; font-size: 14px;"
-      )
-      self.games_container.setStyleSheet(
-          "background-color: #fffaf0; border: 3px solid #ff7700; border-radius:"
-          " 15px;"
-      )
-      self.lib_container.setStyleSheet(
-          "background-color: #fffaf0; border: 3px solid #ff7700; border-radius:"
-          " 15px;"
-      )
-      self.friends_container.setStyleSheet(
-          "background-color: #fffaf0; border: 3px solid #ff7700; border-radius:"
-          " 15px;"
-      )
-      for card in self.shop_card_frames:
-        card.setStyleSheet(
-            "background: white; border: 1px solid #ddd; border-radius: 12px;"
-        )
-      inactive_tab = (
-          "background-color: #f0f0f0; color: #333; font-weight: bold; border: 2px"
-          " solid #333; border-radius: 8px; padding: 6px 14px; font-size: 14px;"
-      )
-
-    self.inactive_tab_style = inactive_tab
-    self.refresh_nav_active_tab_style()
-
-  def refresh_nav_active_tab_style(self):
-    idx = self.content_stack.currentIndex()
-    active_style = (
-        "background-color: white; color: black; font-weight: bold; border: 2px"
-        " solid #333; border-radius: 8px; padding: 6px 14px; font-size: 14px;"
-    )
-    if self.is_dark_theme():
-      active_style = (
-          "background-color: #333; color: white; font-weight: bold; border: 2px"
-          " solid #555; border-radius: 8px; padding: 6px 14px; font-size: 14px;"
-      )
-
-    self.shop_tab_btn.setStyleSheet(
-        active_style if idx == 0 else self.inactive_tab_style
-    )
-    self.lib_tab_btn.setStyleSheet(
-        active_style if idx == 1 else self.inactive_tab_style
-    )
-    self.friends_tab_btn.setStyleSheet(
-        active_style if idx == 2 else self.inactive_tab_style
-    )
-
-  def reset_nav_styles(self):
-    self.refresh_nav_active_tab_style()
+    self.show_shop()
 
   def show_shop(self):
     self.content_stack.setCurrentIndex(0)
-    self.reset_nav_styles()
+    self.shop_tab_btn.setStyleSheet(
+        "background: #ff7700; color: white; font-weight: bold; border-radius:"
+        " 8px; padding: 6px 14px; font-size: 14px;"
+    )
+    self.lib_tab_btn.setStyleSheet(
+        "background: #eee; color: #333; font-weight: bold; border-radius: 8px;"
+        " padding: 6px 14px; font-size: 14px;"
+    )
+    self.friends_tab_btn.setStyleSheet(
+        "background: #eee; color: #333; font-weight: bold; border-radius: 8px;"
+        " padding: 6px 14px; font-size: 14px;"
+    )
+    self.apply_theme()
     self.refresh_shop_view()
 
   def show_library(self):
+    self.has_new_library_item = False
+    self.notification_dot.hide()
     self.content_stack.setCurrentIndex(1)
-    self.reset_nav_styles()
-
-    if self.has_new_library_item:
-      self.has_new_library_item = False
-      self.notification_dot.hide()
-
+    self.lib_tab_btn.setStyleSheet(
+        "background: #ff7700; color: white; font-weight: bold; border-radius:"
+        " 8px; padding: 6px 14px; font-size: 14px;"
+    )
+    self.shop_tab_btn.setStyleSheet(
+        "background: #eee; color: #333; font-weight: bold; border-radius: 8px;"
+        " padding: 6px 14px; font-size: 14px;"
+    )
+    self.friends_tab_btn.setStyleSheet(
+        "background: #eee; color: #333; font-weight: bold; border-radius: 8px;"
+        " padding: 6px 14px; font-size: 14px;"
+    )
+    self.apply_theme()
     self.refresh_library_view()
 
   def show_friends(self):
+    self.has_new_friend_notification = False
+    self.friend_notification_dot.hide()
     self.content_stack.setCurrentIndex(2)
-    self.reset_nav_styles()
-
-    if self.has_new_friend_notification:
-      self.has_new_friend_notification = False
-      self.friend_notification_dot.hide()
-
-    self.refresh_friends_view()
+    self.friends_tab_btn.setStyleSheet(
+        "background: #ff7700; color: white; font-weight: bold; border-radius:"
+        " 8px; padding: 6px 14px; font-size: 14px;"
+    )
+    self.shop_tab_btn.setStyleSheet(
+        "background: #eee; color: #333; font-weight: bold; border-radius: 8px;"
+        " padding: 6px 14px; font-size: 14px;"
+    )
+    self.lib_tab_btn.setStyleSheet(
+        "background: #eee; color: #333; font-weight: bold; border-radius: 8px;"
+        " padding: 6px 14px; font-size: 14px;"
+    )
+    self.apply_theme()
+    self.switch_friends_subtab(0)
 
   def switch_friends_subtab(self, index):
     self.friends_sub_stack.setCurrentIndex(index)
+    dark = self.is_dark_theme()
     active = (
         "background: #ff7700; color: white; font-weight: bold; border-radius:"
         " 6px; padding: 8px 16px;"
     )
     inactive = (
-        "background: #333; color: #ccc; font-weight: bold; border: 1px solid"
-        " #555; border-radius: 6px; padding: 8px 16px;"
-        if self.is_dark_theme()
-        else "background: white; color: #333; font-weight: bold; border: 1px solid #ccc; border-radius: 6px; padding: 8px 16px;"
+        "background: #2a2a2a; color: #ccc; font-weight: bold; border: 1px solid"
+        " #444; border-radius: 6px; padding: 8px 16px;"
+        if dark
+        else "background: white; color: #333; font-weight: bold; border: 1px"
+        " solid #ccc; border-radius: 6px; padding: 8px 16px;"
     )
-
     self.cat_friends_btn.setStyleSheet(active if index == 0 else inactive)
     self.cat_add_btn.setStyleSheet(active if index == 1 else inactive)
     self.cat_req_btn.setStyleSheet(active if index == 2 else inactive)
-
     self.friend_req_status.setText("")
     self.refresh_friends_view()
 
@@ -1031,7 +1002,6 @@ class MainScreen(QWidget):
         self.main_window.current_user, {"library": {}}
     )
     library_games = user_db.get("library", {})
-
     for title, btn in self.shop_buttons.items():
       if title in library_games:
         btn.setText("Куплено")
@@ -1044,8 +1014,8 @@ class MainScreen(QWidget):
         btn.setText("Купить: 0 руб")
         btn.setEnabled(True)
         btn.setStyleSheet(
-            "background: #ff7700; color: white; padding: 8px 15px; border-radius:"
-            " 6px; font-weight: bold; font-size: 14px;"
+            "background: #ff7700; color: white; padding: 8px 15px;"
+            " border-radius: 6px; font-weight: bold; font-size: 14px;"
         )
 
   def buy_game(self, title):
@@ -1053,7 +1023,6 @@ class MainScreen(QWidget):
     if title not in user_db["library"]:
       user_db["library"][title] = "download"
       save_users(self.main_window.users_db)
-
       self.has_new_library_item = True
       self.notification_dot.show()
       self.refresh_shop_view()
@@ -1077,60 +1046,48 @@ class MainScreen(QWidget):
       return
 
     max_columns = 4
-
     for index, (title, status) in enumerate(library_games.items()):
       desc = next((d for t, d, f in self.games_list if t == title), "")
       action_text = "Скачать" if status == "download" else "Играть"
-
       card = DownloadableGameCard(
           title,
           desc,
           action_text,
           lambda t=title: self.on_game_action(t),
-          self.is_dark_theme(),
+          is_dark=self.is_dark_theme(),
       )
-
       row = index // max_columns
       col = index % max_columns
       self.lib_grid_layout.addWidget(card, row, col)
 
   def on_game_action(self, title):
     user_db = self.main_window.users_db[self.main_window.current_user]
-    current_status = user_db["library"].get(title)
-
-    if current_status == "download":
+    if user_db["library"].get(title) == "download":
       user_db["library"][title] = "play"
       save_users(self.main_window.users_db)
+      self.refresh_library_view()
     else:
-      filename = next((f for t, d, f in self.games_list if t == title), None)
-      if filename:
-        game_path = os.path.join(GAMES_DIR, filename)
-        if os.path.exists(game_path):
-          try:
-            self.main_window.set_user_game_status(title)
-            proc = subprocess.Popen([sys.executable, game_path])
-            self.main_window.monitor_game_process(proc)
-          except Exception as e:
-            print(f"Ошибка при вызове subprocess: {e}")
-            self.main_window.set_user_game_status(None)
+      filename = next((f for t, d, f in self.games_list if t == title), "")
+      game_path = os.path.join(GAMES_DIR, filename)
+      if os.path.exists(game_path):
+        subprocess.Popen([sys.executable, game_path])
+      else:
+        print(f"Файл игры не найден: {game_path}")
 
   def refresh_friends_view(self):
-    if not self.main_window.current_user:
-      return
-
-    current_user_data = self.main_window.users_db.get(
-        self.main_window.current_user, {}
-    )
-    friends = current_user_data.get("friends", [])
-    requests = current_user_data.get("requests", [])
-    dark = self.is_dark_theme()
-    card_bg = "#2a2a2a" if dark else "white"
-    card_border = "#444" if dark else "#ddd"
-
     while self.friends_list_layout.count():
       item = self.friends_list_layout.takeAt(0)
       if item.widget():
         item.widget().deleteLater()
+
+    me = self.main_window.current_user
+    my_data = self.main_window.users_db.get(me, {})
+    friends = my_data.get("friends", [])
+    requests = my_data.get("requests", [])
+
+    dark = self.is_dark_theme()
+    card_bg = "#222" if dark else "white"
+    card_border = "#444" if dark else "#ddd"
 
     if not friends:
       lbl = QLabel("У вас пока нет друзей.")
@@ -1231,17 +1188,14 @@ class MainScreen(QWidget):
   def send_friend_request(self):
     target_nick = self.friend_search_input.text().strip()
     me = self.main_window.current_user
-
     if not target_nick:
       self.friend_req_status.setStyleSheet("color: red; border: none;")
       self.friend_req_status.setText("Введите никнейм!")
       return
-
     if target_nick == me:
       self.friend_req_status.setStyleSheet("color: red; border: none;")
       self.friend_req_status.setText("Нельзя добавить самого себя!")
       return
-
     if target_nick not in self.main_window.users_db:
       self.friend_req_status.setStyleSheet("color: red; border: none;")
       self.friend_req_status.setText("Пользователь не найден!")
@@ -1251,22 +1205,21 @@ class MainScreen(QWidget):
     my_data = self.main_window.users_db[me]
 
     if target_nick in my_data.get("friends", []):
-      self.friend_req_status.setStyleSheet("color: orange; border: none;")
-      self.friend_req_status.setText("Этот пользователь уже в ваших друзьях!")
+      self.friend_req_status.setStyleSheet("color: red; border: none;")
+      self.friend_req_status.setText("Вы уже друзья!")
       return
-
     if me in target_data.get("requests", []):
       self.friend_req_status.setStyleSheet("color: orange; border: none;")
-      self.friend_req_status.setText("Запрос уже отправлен ранее!")
+      self.friend_req_status.setText("Запрос уже отправлен!")
       return
 
-    target_data.setdefault("requests", []).append(me)
+    if "requests" not in target_data:
+      target_data["requests"] = []
+    target_data["requests"].append(me)
     save_users(self.main_window.users_db)
 
     self.friend_req_status.setStyleSheet("color: green; border: none;")
-    self.friend_req_status.setText(
-        f"Запрос пользователю {target_nick} отправлен!"
-    )
+    self.friend_req_status.setText("Запрос в друзья успешно отправлен!")
     self.friend_search_input.clear()
 
   def accept_friend_request(self, req_nick):
@@ -1276,25 +1229,27 @@ class MainScreen(QWidget):
 
     if req_nick in my_data.get("requests", []):
       my_data["requests"].remove(req_nick)
+      if "friends" not in my_data:
+        my_data["friends"] = []
+      if req_nick not in my_data["friends"]:
+        my_data["friends"].append(req_nick)
 
-    if req_nick not in my_data.setdefault("friends", []):
-      my_data["friends"].append(req_nick)
+      if req_data:
+        if "friends" not in req_data:
+          req_data["friends"] = []
+        if me not in req_data["friends"]:
+          req_data["friends"].append(me)
 
-    if req_data and me not in req_data.setdefault("friends", []):
-      req_data["friends"].append(me)
-
-    save_users(self.main_window.users_db)
-    self.refresh_friends_view()
+      save_users(self.main_window.users_db)
+      self.refresh_friends_view()
 
   def decline_friend_request(self, req_nick):
     me = self.main_window.current_user
     my_data = self.main_window.users_db[me]
-
     if req_nick in my_data.get("requests", []):
       my_data["requests"].remove(req_nick)
-
-    save_users(self.main_window.users_db)
-    self.refresh_friends_view()
+      save_users(self.main_window.users_db)
+      self.refresh_friends_view()
 
   def remove_friend(self, friend_nick):
     me = self.main_window.current_user
@@ -1303,7 +1258,6 @@ class MainScreen(QWidget):
 
     if friend_nick in my_data.get("friends", []):
       my_data["friends"].remove(friend_nick)
-
     if f_data and me in f_data.get("friends", []):
       f_data["friends"].remove(me)
 
@@ -1315,11 +1269,8 @@ class MainScreen(QWidget):
       if self.menu:
         self.menu.close()
       return
-
     self.menu_is_open = True
-    self.profile_btn.setText(
-        f" {self.current_avatar}  {self.current_name}  ▴"
-    )
+    self.profile_btn.setText(f" {self.current_avatar}  {self.current_name}  ▴")
 
     self.menu = QMenu(self)
     self.menu.setStyleSheet(
@@ -1345,10 +1296,63 @@ class MainScreen(QWidget):
 
   def on_menu_closed(self):
     self.menu_is_open = False
-    self.profile_btn.setText(
-        f" {self.current_avatar}  {self.current_name}  ▾"
-    )
+    self.profile_btn.setText(f" {self.current_avatar}  {self.current_name}  ▾")
     self.menu = None
+
+  def is_dark_theme(self):
+    if not self.main_window.current_user:
+      return False
+    user_data = self.main_window.users_db.get(self.main_window.current_user, {})
+    return user_data.get("dark_theme", False)
+
+  def apply_theme(self):
+    dark = self.is_dark_theme()
+    if dark:
+      self.setStyleSheet("background-color: #121212; color: white;")
+      self.top_bar.setStyleSheet("background-color: #1f1f1f;")
+      self.about_btn.setStyleSheet(
+          "background-color: #333; color: white; font-weight: bold; border: 2px"
+          " solid #555; border-radius: 8px; padding: 6px 14px; font-size: 14px;"
+      )
+      self.games_container.setStyleSheet(
+          "background-color: #1e1e1e; border: 3px solid #ff7700; border-radius:"
+          " 15px;"
+      )
+      self.lib_container.setStyleSheet(
+          "background-color: #1e1e1e; border: 3px solid #ff7700; border-radius:"
+          " 15px;"
+      )
+      self.friends_container.setStyleSheet(
+          "background-color: #1e1e1e; border: 3px solid #ff7700; border-radius:"
+          " 15px;"
+      )
+      for card in self.shop_card_frames:
+        card.setStyleSheet(
+            "background: #2a2a2a; border: 1px solid #444; border-radius: 12px;"
+        )
+    else:
+      self.setStyleSheet("background-color: white; color: black;")
+      self.top_bar.setStyleSheet("background-color: #ff7700;")
+      self.about_btn.setStyleSheet(
+          "background-color: white; color: black; font-weight: bold; border: 2px"
+          " solid #333; border-radius: 8px; padding: 6px 14px; font-size: 14px;"
+      )
+      self.games_container.setStyleSheet(
+          "background-color: #fffaf0; border: 3px solid #ff7700; border-radius:"
+          " 15px;"
+      )
+      self.lib_container.setStyleSheet(
+          "background-color: #fffaf0; border: 3px solid #ff7700; border-radius:"
+          " 15px;"
+      )
+      self.friends_container.setStyleSheet(
+          "background-color: #fffaf0; border: 3px solid #ff7700; border-radius:"
+          " 15px;"
+      )
+      for card in self.shop_card_frames:
+        card.setStyleSheet(
+            "background: white; border: 1px solid #ddd; border-radius: 12px;"
+        )
 
 
 class SettingsScreen(QWidget):
@@ -1366,6 +1370,7 @@ class SettingsScreen(QWidget):
     title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     form_layout = QVBoxLayout()
+    form_layout.setSpacing(15)
 
     row_av = QHBoxLayout()
     lbl_av = QLabel("Аватар (эмодзи):")
@@ -1389,18 +1394,17 @@ class SettingsScreen(QWidget):
     row_nick.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     row_theme = QHBoxLayout()
-    self.dark_theme_check = QCheckBox("Включить темную тему")
-    self.dark_theme_check.setStyleSheet("font-size: 15px; color: white;")
+    self.dark_theme_check = QCheckBox("Включить тёмную тему")
+    self.dark_theme_check.setStyleSheet("font-size: 14px;")
     row_theme.addWidget(self.dark_theme_check)
     row_theme.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     form_layout.addLayout(row_av)
     form_layout.addLayout(row_nick)
-    form_layout.addSpacing(10)
     form_layout.addLayout(row_theme)
 
     self.error_lbl = QLabel("")
-    self.error_lbl.setStyleSheet("color: #ff3333; font-size: 12px;")
+    self.error_lbl.setStyleSheet("color: #ff4444; font-size: 13px;")
     self.error_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     save_btn = QPushButton("Сохранить изменения")
@@ -1408,17 +1412,19 @@ class SettingsScreen(QWidget):
         "background: #ff7700; color: white; font-weight: bold; padding: 10px"
         " 20px; border-radius: 6px; font-size: 14px;"
     )
+    save_btn.setFixedSize(220, 40)
     save_btn.clicked.connect(self.save_settings)
 
-    back_btn = QPushButton("Назад")
+    back_btn = QPushButton("Назад в меню")
     back_btn.setStyleSheet(
-        "background: #444; color: white; padding: 8px 15px; border-radius:"
-        " 5px; font-size: 14px;"
+        "background: #444; color: white; padding: 10px 20px; border-radius:"
+        " 6px; font-size: 14px;"
     )
-    back_btn.clicked.connect(lambda: self.main_window.switch_screen(2))
+    back_btn.setFixedSize(220, 40)
+    back_btn.clicked.connect(self.go_back)
 
     layout.addWidget(title)
-    layout.addSpacing(20)
+    layout.addSpacing(25)
     layout.addLayout(form_layout)
     layout.addWidget(self.error_lbl)
     layout.addSpacing(15)
@@ -1428,23 +1434,28 @@ class SettingsScreen(QWidget):
 
     self.setLayout(layout)
 
-  def load_current_data(self, avatar, username, dark_theme):
+  def load_current_data(self, avatar, nickname, is_dark):
     self.avatar_input.setText(avatar)
-    self.nick_input.setText(username)
-    self.old_username = username
-    self.dark_theme_check.setChecked(dark_theme)
+    self.nick_input.setText(nickname)
+    self.dark_theme_check.setChecked(is_dark)
     self.error_lbl.setText("")
+    self.old_nickname = nickname
 
   def save_settings(self):
-    new_avatar = self.avatar_input.text().strip()
     new_nick = self.nick_input.text().strip()
+    new_avatar = self.avatar_input.text().strip() or "🟩"
     is_dark = self.dark_theme_check.isChecked()
-    if not new_avatar or not new_nick:
-      self.error_lbl.setText("Поля не должны быть пустыми!")
+
+    if not new_nick:
+      self.error_lbl.setText("Никнейм не может быть пустым!")
       return
+
     self.main_window.update_user_credentials(
-        self.old_username, new_nick, new_avatar, is_dark
+        self.old_nickname, new_nick, new_avatar, is_dark
     )
+
+  def go_back(self):
+    self.main_window.switch_screen(2)
 
 
 class AboutScreen(QWidget):
@@ -1452,12 +1463,14 @@ class AboutScreen(QWidget):
   def __init__(self, main_window):
     super().__init__()
     self.main_window = main_window
-    self.setStyleSheet("background-color: #121212; color: white;")
+    self.setStyleSheet("background-color: #181818; color: white;")
+
     layout = QVBoxLayout()
     layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    layout.setContentsMargins(40, 40, 40, 40)
 
     title = QLabel("О платформе Buterkod")
-    title.setStyleSheet("font-size: 24px; font-weight: bold; color: #ffaa00;")
+    title.setStyleSheet("font-size: 28px; font-weight: bold; color: #ff7700;")
     title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     desc = QLabel(
@@ -1474,7 +1487,7 @@ class AboutScreen(QWidget):
     )
     back_btn.clicked.connect(lambda: self.main_window.switch_screen(2))
 
-    version_lbl = QLabel("Версия 1.1\nРелиз")
+    version_lbl = QLabel("Версия 1.0\nРелиз")
     version_lbl.setStyleSheet("font-size: 12px; color: #666;")
     version_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -1500,14 +1513,20 @@ class MainWindow(QStackedWidget):
     self.online_users = set()
     self.user_current_game = {}
 
-    self.player = QMediaPlayer(self)
+    # Надежная инициализация музыки
     self.audio_output = QAudioOutput(self)
-    self.player.setAudioOutput(self.audio_output)
     self.audio_output.setVolume(0.5)
 
-    music_path = os.path.join(BASE_DIR, "Music", "Buterkod_music.mp3")
-    self.player.setSource(QUrl.fromLocalFile(music_path))
+    self.player = QMediaPlayer(self)
+    self.player.setAudioOutput(self.audio_output)
     self.player.setLoops(QMediaPlayer.Loops.Infinite)
+
+    music_path = os.path.join(BASE_DIR, "Music", "Buterkod_music.mp3")
+    if os.path.exists(music_path):
+      self.player.setSource(QUrl.fromLocalFile(music_path))
+      self.player.play()
+    else:
+      print(f"Файл фоновой музыки не найден: {music_path}")
 
     self.users_db = load_users()
     self.current_user = None
@@ -1524,100 +1543,63 @@ class MainWindow(QStackedWidget):
     self.addWidget(self.settings_screen)
     self.addWidget(self.about_screen)
 
-    self.notification_timer = QTimer(self)
-    self.notification_timer.timeout.connect(self.check_notifications)
-    self.notification_timer.start(2000)
-
     self.switch_screen(0)
 
-  def check_notifications(self):
-    if not self.current_user:
-      return
-    self.users_db = load_users()
-    user_data = self.users_db.get(self.current_user, {})
-    requests = user_data.get("requests", [])
-
-    if requests:
-      self.main_screen.friend_notification_dot.show()
-      self.main_screen.has_new_friend_notification = True
-
-    if self.main_screen.content_stack.currentIndex() == 2:
-      self.main_screen.refresh_friends_view()
-
   def switch_screen(self, index):
-    if index in (0, 1) and self.current_user:
-      if self.current_user in self.online_users:
-        self.online_users.remove(self.current_user)
-      self.user_current_game.pop(self.current_user, None)
-      self.current_user = None
-
     self.setCurrentIndex(index)
-    if index == 2:
-      self.main_screen.apply_theme()
-      self.main_screen.refresh_shop_view()
-
-    if index in (0, 1):
-      if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
-        self.player.play()
-    else:
-      self.player.stop()
-
-  def get_user_status(self, username):
-    if username in self.online_users:
-      game = self.user_current_game.get(username)
-      if game:
-        return f"🎮 Играет в: {game}", "#ff7700"
-      return "🟢 В сети", "#4CAF50"
-    return "⚪ Не в сети", "#888888"
-
-  def set_user_game_status(self, game_title):
-    if self.current_user:
-      if game_title:
-        self.user_current_game[self.current_user] = game_title
-      else:
-        self.user_current_game.pop(self.current_user, None)
-      self.main_screen.refresh_friends_view()
-
-  def monitor_game_process(self, proc):
-    timer = QTimer(self)
-
-    def check():
-      if proc.poll() is not None:
-        timer.stop()
-        self.set_user_game_status(None)
-
-    timer.timeout.connect(check)
-    timer.start(2000)
+    if index == 2 and self.current_user:
+      self.online_users.add(self.current_user)
+    elif index != 2 and self.current_user in self.online_users:
+      self.online_users.remove(self.current_user)
 
   def handle_login_attempt(self, username, password):
     if username not in self.users_db:
-      self.login_screen.show_error("Такой ник не найден!")
-    elif self.users_db[username]["password"] != password:
+      self.login_screen.show_error("Такого пользователя не существует!")
+      return
+
+    if self.users_db[username]["password"] != password:
       self.login_screen.show_error("Неверный пароль!")
-    else:
-      self.current_user = username
-      self.online_users.add(username)
-      avatar = self.users_db[username].get("avatar", "🟩")
-      self.main_screen.update_user_info(avatar, username)
-      self.switch_screen(2)
+      return
+
+    self.current_user = username
+    if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+      self.player.play()
+
+    user_data = self.users_db[username]
+    self.main_screen.update_user_info(
+        user_data.get("avatar", "🟩"), username
+    )
+    self.switch_screen(2)
 
   def handle_register_attempt(self, username, password):
     if username in self.users_db:
-      self.register_screen.show_error("Этот ник уже занят!")
-    else:
-      self.users_db[username] = {
-          "password": password,
-          "avatar": "🟩",
-          "library": {},
-          "friends": [],
-          "requests": [],
-          "dark_theme": False,
-      }
-      save_users(self.users_db)
-      self.current_user = username
-      self.online_users.add(username)
-      self.main_screen.update_user_info("🟩", username)
-      self.switch_screen(2)
+      self.register_screen.show_error("Такой ник уже занят!")
+      return
+
+    self.users_db[username] = {
+        "password": password,
+        "avatar": "🟩",
+        "library": {},
+        "friends": [],
+        "requests": [],
+        "dark_theme": False,
+    }
+    save_users(self.users_db)
+
+    self.current_user = username
+    if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+      self.player.play()
+
+    self.main_screen.update_user_info("🟩", username)
+    self.switch_screen(2)
+
+  def get_user_status(self, nick):
+    if nick in self.online_users:
+      game = self.user_current_game.get(nick)
+      if game:
+        return f"Играет в {game}", "#4CAF50"
+      return "В сети", "#4CAF50"
+    return "Не в сети", "#888888"
 
   def open_settings(self):
     user_data = self.users_db[self.current_user]
@@ -1650,13 +1632,13 @@ class MainWindow(QStackedWidget):
       self.online_users.remove(old_nick)
       self.online_users.add(new_nick)
 
-    if old_nick in self.user_current_game:
-      game = self.user_current_game.pop(old_nick)
-      self.user_current_game[new_nick] = game
-
     self.current_user = new_nick
     self.main_screen.update_user_info(new_avatar, new_nick)
-    self.switch_screen(2)
+    user_data = self.users_db[self.current_user]
+    avatar = user_data.get("avatar", "🟩")
+    dark = user_data.get("dark_theme", False)
+    self.settings_screen.load_current_data(avatar, self.current_user, dark)
+    self.switch_screen(3)
 
 
 if __name__ == "__main__":
